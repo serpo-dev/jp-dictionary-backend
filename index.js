@@ -1,24 +1,30 @@
+require('dotenv').config();
+const PORT = process.env.PORT || 5000;
+
 const express = require('express');
-const mysql = require('mysql2');
+const app = new express();
 
-const app = express();
-const port = 7777;
+const cors = require('cors');
+app.use(cors());
+app.use(express.json());
 
-const connection = mysql.createConnection({
-    host: 's91226tr.beget.tech',
-    user: 's91226tr_a',
-    database: 's91226tr_a',
-    password: 'I2K1U&mI'
-});
+const router = require('./routes/index');
+app.use('/api', router);
 
-connection.connect((err) => {
-    if (err) {
-        console.log('ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!', err);
-    } else {
-        console.log('OKKKKKKKKKKKKKKKKKKKKKKKKKKKAAYYYYYYYYYYY!!!!!!!!!')
+const errorHandler = require('./middleware/ErrorHandlingMiddleware');
+app.use(errorHandler); // последний middleware, т.к. на нем работа прекращается, т.к. в нем нет функции next();
+
+const sequelize = require('./db');
+const models = require('./models/models');
+async function start() {
+    try {
+        await sequelize.authenticate();
+        await sequelize.sync();     // сверяет состояние БД со описанной схемой даннчых
+        app.listen(PORT, () => {
+            console.log(`The server started on port ${PORT}`);
+        });
+    } catch (err) {
+        console.log(`The server can't start because of: ${err}`);
     };
-});
-
-app.listen(port, () => {
-    console.log('server is OK');
-});
+};
+start();
