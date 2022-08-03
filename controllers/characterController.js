@@ -1,6 +1,5 @@
 const { character, kanji, kanji_component_link, translation, example, component } = require('../models/models');
 const ApiError = require('../error/ApiError');
-const { splitColumns, splitRows } = require('../handlers/textHandler');
 
 class CharacterController {
     async getOne(req, res, next) {
@@ -13,11 +12,23 @@ class CharacterController {
             return next(ApiError.badRequest(`Error! The 'id' isn't a 'number' type.`));
         };
 
-        const result = await character.findOne({ where: { id } });
-        if (!result) {
+        let result;
+        const characterPart = await character.findOne({ where: { id } });
+        if (characterPart) {
+            result = {
+                characterPart
+            };
+        } else {
             return next(ApiError.badRequest(`Error! The character with id='${id}' doesn't exist.`));
         };
-        return res.status(200).json({ result });
+        if (characterPart.type === 'KANJI') {
+            const kanjiPart = await kanji.findOne({ where: { characterId: id } });
+            result = {
+                ...result,
+                kanjiPart
+            };
+        };
+        return res.status(200).json({ ...result });
     };
 
     async getAll(req, res) {
@@ -26,10 +37,10 @@ class CharacterController {
 
     async create(req, res) {
         const {
+            type,
             associations,
 
             title,
-            type,
             meaning,
             img,
             description,
@@ -50,7 +61,6 @@ class CharacterController {
             mnemoImg,
             mnemoDisc
         });
-
         newCharacter.URI = `${newCharacter.id}-${meaning}`;
         await newCharacter.save();
 
@@ -62,49 +72,47 @@ class CharacterController {
                     examLevel,
                     characterId: newCharacter.id
                 });
-                if (associations) {
-                    const linkedComponents = associations.split(splitColumns);
-                    const componentsCount = linkedComponents.length;
-                    let l_c = 0;
-                    while (l_c < componentsCount) {
-                        const componentId = Number(linkedComponents[l_c]);
-                        await kanji_component_link.create({
-                            componentId: componentId,
-                            kanjiId: newKanji.id
-                        });
-                        l_c++;
+                if (examLevel) {
+                    newKanji.examLevel = examLevel;
+                    await newKanji.save();
+                };
+                if (associations[0]) {
+                    let i = 0;
+                    while (i < associations.length) {
+                        const componentId = Number(associations[i]);
+                        if (componentId) {
+                            await kanji_component_link.create({
+                                componentId: associations[i],
+                                kanjiId: newKanji.id
+                            });
+                        };
+                        i++;
                     };
                 };
                 if (translations) {
-                    const dividedTranslations = translations.split(splitRows);
-                    const translationsCount = dividedTranslations.length;
-                    let t = 0;
-                    while (t < translationsCount) {
-                        const dividedTranslationLanguages = dividedTranslations[t].split(splitColumns);
+                    let i = 0;
+                    while (i < translations.length) {
                         await translation.create({
-                            jpNormalText: dividedTranslationLanguages[0],
-                            jpFuriganaText: dividedTranslationLanguages[1],
-                            enText: dividedTranslationLanguages[2],
-                            ruText: dividedTranslationLanguages[3],
+                            jpNormalText: translations[i].jpNormalText,
+                            jpFuriganaText: translations[i].jpFuriganaText,
+                            enText: translations[i].enText,
+                            ruText: translations[i].ruText,
                             kanjiId: newKanji.id
                         });
-                        t++;
+                        i++;
                     };
                 };
                 if (examples) {
-                    const dividedExamples = examples.split(splitRows);
-                    const examplesCount = dividedExamples.length;
-                    let e = 0;
-                    while (e < examplesCount) {
-                        const dividedExamplesLanguages = dividedExamples[e].split(splitColumns);
-                        await example.create({
-                            jpNormalText: dividedExamplesLanguages[0],
-                            jpFuriganaText: dividedExamplesLanguages[1],
-                            enText: dividedExamplesLanguages[2],
-                            ruText: dividedExamplesLanguages[3],
+                    let i = 0;
+                    while (i < examples.length) {
+                        await translation.create({
+                            jpNormalText: examples[i].jpNormalText,
+                            jpFuriganaText: examples[i].jpFuriganaText,
+                            enText: examples[i].enText,
+                            ruText: examples[i].ruText,
                             kanjiId: newKanji.id
                         });
-                        e++;
+                        i++;
                     };
                 };
                 return res.status(201).json({ message: 'Successful! The new kanji created.' });
