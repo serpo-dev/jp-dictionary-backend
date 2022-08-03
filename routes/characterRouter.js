@@ -6,8 +6,10 @@ const checkRoleMiddleware = require('../middleware/checkRoleMiddleware');
 
 router.get('/:id', characterController.getOne);
 router.get('/', characterController.getAll);
-router.post('/', authMiddleware, checkRoleMiddleware.admin, characterController.create);
+router.post('/', authMiddleware,  characterController.create);
 router.put('/:id', characterController.update);
 router.delete('/:id', characterController.delete);
 
 module.exports = router;
+ 
+// checkRoleMiddleware.admin,

@@ -30,6 +30,7 @@ const progress = sequelize.define('progress', {
 const character = sequelize.define('character', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
     img: { type: DataTypes.STRING },
+    URI: { type: DataTypes.STRING },
     title: { type: DataTypes.STRING },
     type: { type: DataTypes.STRING },
     meaning: { type: DataTypes.STRING },
