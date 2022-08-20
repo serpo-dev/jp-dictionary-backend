@@ -4,7 +4,7 @@ const characterController = require('../controllers/characterController');
 const authMiddleware = require('../middleware/authMiddleware');
 const checkRoleMiddleware = require('../middleware/checkRoleMiddleware');
 
-router.get('/:id', characterController.getOne);
+router.get('/:URI', characterController.getOne);
 router.get('/', characterController.getAll);
 router.post('/', authMiddleware,  characterController.create);
 router.put('/:id', characterController.update);

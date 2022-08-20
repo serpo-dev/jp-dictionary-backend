@@ -4,14 +4,18 @@ const ApiError = require('../error/ApiError');
 class CharacterController {
     async getOne(req, res, next) {
         const requestBody = req.params;
-        const id = Number(requestBody.id);
+        const URI = requestBody.URI;
+        if (!URI) {
+            return next(ApiError.badRequest(`Error! The URI parameter doesn't exist.`));
+        };
+        const stringId = URI.split('-')[0];
+        const id = Number(stringId);
         if (!id) {
-            return next(ApiError.badRequest(`Error! The 'id' field is empty.`));
+            return next(ApiError.badRequest(`Error! The error could happen because of: 1) 'id' param is empty; 2) 'id' param didn't read (it wasn't separated by the dash in the high order URI param).`));
         };
         if (typeof (id) !== 'number') {
             return next(ApiError.badRequest(`Error! The 'id' isn't a 'number' type.`));
         };
-
         let result;
         const characterPart = await character.findOne({ where: { id } });
         if (characterPart) {
@@ -31,11 +35,11 @@ class CharacterController {
         return res.status(200).json({ ...result });
     };
 
-    async getAll(req, res) {
+    async getAll(req, res, next) {
 
     };
 
-    async create(req, res) {
+    async create(req, res, next) {
         const {
             type,
             associations,
@@ -139,11 +143,11 @@ class CharacterController {
         };
     };
 
-    async update(req, res) {
+    async update(req, res, next) {
 
     };
 
-    async delete(req, res) {
+    async delete(req, res, next) {
 
     };
 };

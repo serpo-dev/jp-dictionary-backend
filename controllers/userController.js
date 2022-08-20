@@ -93,12 +93,15 @@ class UserController {
             return next(ApiError.internal(`Error! Invalid password.`));
         };
 
+        const progressPart = await progress.findOne({ where: { userId: candidate.id } });
+
         const token = jwt.sign(
             {
                 id: candidate.id,
-                login,
-                email,
-                role: candidate.role
+                login: candidate.login,
+                email: candidate.email,
+                role: candidate.role,
+                level: progressPart.level
             },
             process.env.JWT_SECRET_KEY,
             { expiresIn: '24h' }
