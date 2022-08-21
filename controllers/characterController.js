@@ -1,6 +1,7 @@
 const { character, kanji, kanji_component_link, translation, example, component } = require('../models/models');
 const ApiError = require('../error/ApiError');
 
+
 class CharacterController {
     async getOne(req, res, next) {
         const requestBody = req.params;
@@ -25,11 +26,37 @@ class CharacterController {
         } else {
             return next(ApiError.badRequest(`Error! The character with id='${id}' doesn't exist.`));
         };
+
+
+
         if (characterPart.type === 'KANJI') {
             const kanjiPart = await kanji.findOne({ where: { characterId: id } });
+            const kanji_id = kanjiPart.id;
+            const examples = await example.findAll({ where: { kanjiId: kanji_id } });
+            const translations = await translation.findAll({ where: { kanjiId: kanji_id } });
+            const accociations = await kanji_component_link.findAll({ where: { kanjiId: kanji_id } });
             result = {
                 ...result,
-                kanjiPart
+                kanjiPart: {
+                    ...kanjiPart,
+                    examples,
+                    translations,
+                },
+                accociations,
+            };
+
+        } else {
+            const component = await component.findOne({ where: { characterId: id } });
+            const component_id = component.id;
+            const accociations = await kanji_component_link.findAll({ where: { componentId: component_id } });
+            result = {
+                ...result,
+                kanjiPart: {
+                    ...kanjiPart,
+                    examples,
+                    translations,
+                },
+                accociations,
             };
         };
         return res.status(200).json({ ...result });
