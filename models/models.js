@@ -1,6 +1,7 @@
 const sequelize = require('../db');
 const { DataTypes } = require('sequelize');
 
+
 const user = sequelize.define('user', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     email: { type: DataTypes.STRING, unique: true, allowNull: false },
@@ -36,12 +37,13 @@ const character = sequelize.define('character', {
     meaning: { type: DataTypes.STRING },
     description: { type: DataTypes.TEXT },
     mnemoImg: { type: DataTypes.STRING },
-    mnemoDisc: { type: DataTypes.TEXT }
+    mnemoDisc: { type: DataTypes.TEXT },
+    variants: { type: DataTypes.ARRAY(DataTypes.STRING) },
 });
 
 const kanji = sequelize.define('kanji', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
-    examLevel: { type: DataTypes.INTEGER }
+    examLevel: { type: DataTypes.INTEGER },
 });
 
 const component = sequelize.define('component', {
@@ -112,6 +114,10 @@ translation.belongsTo(kanji);
 
 component.belongsToMany(kanji, { through: kanji_component_link });
 kanji.belongsToMany(component, { through: kanji_component_link });
+
+
+sequelize.sync({ alter: true });
+
 
 module.exports = {
     user,

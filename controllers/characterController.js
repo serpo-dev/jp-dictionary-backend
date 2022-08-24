@@ -27,14 +27,12 @@ class CharacterController {
             return next(ApiError.badRequest(`Error! The character with id='${id}' doesn't exist.`));
         };
 
-
-
         if (characterPart.type === 'KANJI') {
             const kanjiPart = await kanji.findOne({ where: { characterId: id } });
             const kanji_id = kanjiPart.id;
             const examples = await example.findAll({ where: { kanjiId: kanji_id } });
             const translations = await translation.findAll({ where: { kanjiId: kanji_id } });
-            const accociations = await kanji_component_link.findAll({ where: { kanjiId: kanji_id } });
+            const associations = await kanji_component_link.findAll({ where: { kanjiId: kanji_id } });
             result = {
                 ...result,
                 kanjiPart: {
@@ -42,13 +40,12 @@ class CharacterController {
                     examples,
                     translations,
                 },
-                accociations,
+                associations,
             };
-
         } else {
             const component = await component.findOne({ where: { characterId: id } });
             const component_id = component.id;
-            const accociations = await kanji_component_link.findAll({ where: { componentId: component_id } });
+            const associations = await kanji_component_link.findAll({ where: { componentId: component_id } });
             result = {
                 ...result,
                 kanjiPart: {
@@ -56,20 +53,21 @@ class CharacterController {
                     examples,
                     translations,
                 },
-                accociations,
+                associations,
             };
         };
         return res.status(200).json({ ...result });
     };
 
     async getAll(req, res, next) {
-
+        const result = await character.findAndCountAll();
+        return res.status(200).json(result);
     };
 
     async create(req, res, next) {
         const {
-            type,
             associations,
+            type,
 
             title,
             meaning,
@@ -77,6 +75,7 @@ class CharacterController {
             description,
             mnemoImg,
             mnemoDisc,
+            variants,
 
             translations,
             examples,
@@ -90,7 +89,8 @@ class CharacterController {
             img,
             description,
             mnemoImg,
-            mnemoDisc
+            mnemoDisc,
+            variants,
         });
         newCharacter.URI = `${newCharacter.id}-${meaning}`;
         await newCharacter.save();
@@ -175,7 +175,25 @@ class CharacterController {
     };
 
     async delete(req, res, next) {
-
+        const characterId = req.params.id;
+        if (!characterId) {
+            return next(ApiError.badRequest(`Error! The ID parameter doesn't exist.`));
+        };
+        const foundCharacter = await character.findOne({ where: { id: characterId } });
+        if (!foundCharacter) {
+            return next(ApiError.badRequest(`Error! The character with this ID doesn't exist.`));
+        };
+        if (foundCharacter.type === 'KANJI') {
+            const { id } = await kanji.findOne({ where: { characterId: characterId } });
+            await kanji_component_link.destroy({ where: { kanjiId: id } });
+            await kanji.destroy({ where: { characterId: characterId } });
+        } else if (foundCharacter.type === 'COMPONENT') {
+            const { id } = await component.findOne({ where: { characterId: characterId } });
+            await kanji_component_link.destroy({ where: { componentId: id } });
+            await component.destroy({ where: { characterId: characterId } });
+        };
+        await character.destroy({ where: { id: characterId } });
+        return res.status(200).json(`Character with ID = ${req.params.id} deleted successfully!`);
     };
 };
 
