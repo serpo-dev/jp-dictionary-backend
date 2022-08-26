@@ -171,7 +171,187 @@ class CharacterController {
     };
 
     async update(req, res, next) {
+        const {
+            id,
+            URI,
+            associations,
+            type,
 
+            title,
+            meaning,
+            img,
+            description,
+            mnemoImg,
+            mnemoDisc,
+            variants,
+
+            translations,
+            examples,
+            examLevel,
+        } = req.body;
+
+        const currentCharacter = await character.findOne({ where: { id: id } });
+        currentCharacter.set({
+            title,
+            type,
+            meaning,
+            img,
+            description,
+            mnemoImg,
+            mnemoDisc,
+            variants,
+        });
+        currentCharacter.URI = `${id}-${meaning}`;
+        await currentCharacter.save();
+
+        switch (type) {
+            case 'KANJI':
+                const curKanji = await kanji.findOne({ where: { characterId: id } });
+                curKanji.set({
+                    translations,
+                    examples,
+                    examLevel,
+                });
+                await curKanji.save();
+
+                if (associations) {
+                    const prevAssociations = await kanji_component_link.findAll({ where: { kanjiId: curKanji.id } });
+                    for (let i = 0; i < associations.length; i++) {
+                        if (!associations[i].id) {
+                            await kanji_component_link.create({
+                                componentId: associations[i].componentId,
+                                kanjiId: curKanji.id
+                            });
+                        } else {
+                            let toDelete = true;
+                            for (let j = 0; j < prevAssociations.length; j++) {
+                                if (prevAssociations[j].id === associations[i].id) {
+                                    const curAss = await kanji_component_link.findOne({ where: { id: associations[i].id } });
+                                    curAss.set({
+                                        componentId: associations[i].componentId,
+                                    });
+                                    await curAss.save();
+                                    toDelete = false;
+                                };
+                            };
+                            if (toDelete) {
+                                await kanji_component_link.destroy({ where: { id: associations[i].id } });
+                            };
+                        };
+                    };
+                } else {
+                    await kanji_component_link.destroy({ where: { kanjiId: curKanji.id } });
+                };
+
+                if (translations) {
+                    const prevTranslations = await translation.findAll({ where: { kanjiId: curKanji.id } });
+                    for (let i = 0; i < translations.length; i++) {
+                        if (!translations[i].id) {
+                            await translation.create({
+                                jpNormalText: translations[i].jpNormalText,
+                                jpFuriganaText: translations[i].jpFuriganaText,
+                                enText: translations[i].enText,
+                                ruText: translations[i].ruText,
+                                kanjiId: curKanji.id
+                            });
+                        } else {
+                            let toDelete = true;
+                            for (let j = 0; j < prevTranslations.length; j++) {
+                                if (prevTranslations[j].id === translations[i].id) {
+                                    const curTrans = await translation.findOne({ where: { id: translations[i].id } });
+                                    curTrans.set({
+                                        jpNormalText: translations[i].jpNormalText,
+                                        jpFuriganaText: translations[i].jpFuriganaText,
+                                        enText: translations[i].enText,
+                                        ruText: translations[i].ruText,
+                                    });
+                                    await curTrans.save();
+                                    toDelete = false;
+                                };
+                            };
+                            if (toDelete) {
+                                await translation.destroy({ where: { id: translations[i].id } });
+                            };
+                        };
+                    };
+                } else {
+                    await translation.destroy({ where: { kanjiId: curKanji.id } });
+                };
+
+
+                if (examples) {
+                    const prevExamples = await example.findAll({ where: { kanjiId: curKanji.id } });
+                    for (let i = 0; i < examples.length; i++) {
+                        if (!examples[i].id) {
+                            await example.create({
+                                jpNormalText: examples[i].jpNormalText,
+                                jpFuriganaText: examples[i].jpFuriganaText,
+                                enText: examples[i].enText,
+                                ruText: examples[i].ruText,
+                                kanjiId: examples.id
+                            });
+                        } else {
+                            let toDelete = true;
+                            for (let j = 0; j < prevExamples.length; j++) {
+                                if (prevExamples[j].id === examples[i].id) {
+                                    const curExmp = await example.findOne({ where: { id: examples[i].id } });
+                                    curExmp.set({
+                                        jpNormalText: examples[i].jpNormalText,
+                                        jpFuriganaText: examples[i].jpFuriganaText,
+                                        enText: examples[i].enText,
+                                        ruText: examples[i].ruText,
+                                    });
+                                    await curExmp.save();
+                                    toDelete = false;
+                                };
+                            };
+                            if (toDelete) {
+                                await example.destroy({ where: { id: examples[i].id } });
+                            };
+                        };
+                    };
+                } else {
+                    await example.destroy({ where: { kanjiId: curKanji.id } });
+                };
+
+                return res.status(201).json({ message: 'Successful! The new kanji created.' });
+
+            case 'COMPONENT':
+                const curComponent = await kanji.findOne({ where: { characterId: id } });
+
+                if (associations) {
+                    const prevAssociations = await kanji_component_link.findAll({ where: { componentId: curComponent.id } });
+                    for (let i = 0; i < associations.length; i++) {
+                        if (!associations[i].id) {
+                            await kanji_component_link.create({
+                                kanjiId: associations[i].kanjiId,
+                                componentId: curComponent.id
+                            });
+                        } else {
+                            let toDelete = true;
+                            for (let j = 0; j < prevAssociations.length; j++) {
+                                if (prevAssociations[j].id === associations[i].id) {
+                                    const curAss = await kanji_component_link.findOne({ where: { id: associations[i].id } });
+                                    curAss.set({
+                                        kanjiId: associations[i].kanjiId,
+                                    });
+                                    await curAss.save();
+                                    toDelete = false;
+                                };
+                            };
+                            if (toDelete) {
+                                await kanji_component_link.destroy({ where: { id: associations[i].id } });
+                            };
+                        };
+                    };
+                } else {
+                    await kanji_component_link.destroy({ where: { componentId: curComponent.id } });
+                };
+                return res.status(201).json({ message: 'Successful! The new component created.' });
+
+            default:
+                return res.status(500).json(`The request didn't have an exist type of character ("KANJI" or "COMPONENT")`);
+        };
     };
 
     async delete(req, res, next) {
