@@ -288,7 +288,7 @@ class CharacterController {
                                 jpFuriganaText: examples[i].jpFuriganaText,
                                 enText: examples[i].enText,
                                 ruText: examples[i].ruText,
-                                kanjiId: examples.id
+                                kanjiId: curKanji.id
                             });
                         } else {
                             let toDelete = true;
