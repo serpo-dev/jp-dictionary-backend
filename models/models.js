@@ -38,9 +38,9 @@ const character = sequelize.define('character', {
     description: { type: DataTypes.TEXT },
     mnemoImg: { type: DataTypes.STRING },
     mnemoDisc: { type: DataTypes.TEXT },
-    variants: { type: DataTypes.ARRAY(DataTypes.STRING) },
+    variants: { type: DataTypes.STRING },
 });
-
+ 
 const kanji = sequelize.define('kanji', {
     id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true, allowNull: false },
     examLevel: { type: DataTypes.INTEGER },

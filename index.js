@@ -16,7 +16,7 @@ app.use(errorHandler); // последний middleware, т.к. на нем ра
 
 const sequelize = require('./db');
 const models = require('./models/models');
-async function start() {
+async function start() { 
     try {
         await sequelize.authenticate();
         await sequelize.sync();     // сверяет состояние БД со описанной схемой даннчых
