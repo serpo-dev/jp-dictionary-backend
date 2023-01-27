@@ -11,5 +11,3 @@ router.put("/:id", authMiddleware, characterController.update);
 router.delete("/:id", authMiddleware, characterController.delete);
 
 module.exports = router;
-
-// checkRoleMiddleware.admin,

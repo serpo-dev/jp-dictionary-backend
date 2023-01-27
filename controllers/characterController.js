@@ -286,11 +286,13 @@ class CharacterController {
                         where: { kanjiId: curKanji.id },
                     });
                 }
-
+                console.log(translations);
+                console.log(examples);
                 if (translations) {
                     const prevTranslations = await translation.findAll({
                         where: { kanjiId: curKanji.id },
                     });
+                    const saveTrans = {};
                     for (let i = 0; i < translations.length; i++) {
                         if (!translations[i].id) {
                             await translation.create({
@@ -301,7 +303,6 @@ class CharacterController {
                                 kanjiId: curKanji.id,
                             });
                         } else {
-                            let toDelete = true;
                             for (let j = 0; j < prevTranslations.length; j++) {
                                 if (
                                     prevTranslations[j].id ===
@@ -319,14 +320,17 @@ class CharacterController {
                                         ruText: translations[i].ruText,
                                     });
                                     await curTrans.save();
-                                    toDelete = false;
+                                    saveTrans[`${translations[i].id}`] = true;
+                                    break;
                                 }
                             }
-                            if (toDelete) {
-                                await translation.destroy({
-                                    where: { id: translations[i].id },
-                                });
-                            }
+                        }
+                    }
+                    for (let k = 0; k < prevTranslations.length; k++) {
+                        if (!saveTrans[`${prevTranslations[k].id}`]) {
+                            await translation.destroy({
+                                where: { id: prevTranslations[k].id },
+                            });
                         }
                     }
                 } else {
@@ -339,6 +343,7 @@ class CharacterController {
                     const prevExamples = await example.findAll({
                         where: { kanjiId: curKanji.id },
                     });
+                    const saveExamples = {};
                     for (let i = 0; i < examples.length; i++) {
                         if (!examples[i].id) {
                             await example.create({
@@ -349,7 +354,6 @@ class CharacterController {
                                 kanjiId: curKanji.id,
                             });
                         } else {
-                            let toDelete = true;
                             for (let j = 0; j < prevExamples.length; j++) {
                                 if (prevExamples[j].id === examples[i].id) {
                                     const curExmp = await example.findOne({
@@ -363,18 +367,23 @@ class CharacterController {
                                         ruText: examples[i].ruText,
                                     });
                                     await curExmp.save();
-                                    toDelete = false;
+                                    saveExamples[`${examples[i].id}`] = true;
+                                    break;
                                 }
-                            }
-                            if (toDelete) {
-                                await example.destroy({
-                                    where: { id: examples[i].id },
-                                });
                             }
                         }
                     }
+                    for (let k = 0; k < prevExamples.length; k++) {
+                        if (!saveExamples[`${prevExamples[k].id}`]) {
+                            await example.destroy({
+                                where: { id: prevExamples[k].id },
+                            });
+                        }
+                    }
                 } else {
-                    await example.destroy({ where: { kanjiId: curKanji.id } });
+                    await example.destroy({
+                        where: { kanjiId: curKanji.id },
+                    });
                 }
 
                 return res
